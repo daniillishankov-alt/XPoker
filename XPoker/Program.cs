@@ -17,13 +17,13 @@ namespace XPoker
 
             Joker activeJoker = new Joker
             {
-                Description = "+10 к множителю (Mult) за каждую комбинацию"
+                Description = "+10 multiplier for each combo"
             };
 
             DrawHeader("XPoker: POKER ROGUELIKE");
-            Console.WriteLine($"\n  [🃏 Джокер]: Грубый Джокер ({activeJoker.Description})");
-            Console.WriteLine($"  [🎯 Цель]: Набрать {targetScore} очков за {handsLeft} хода(-ов).\n");
-            Console.Write("  Нажмите любую клавишу, чтобы начать раунд...");
+            Console.WriteLine($"\n  [🃏 Joker]: Грубый Джокер ({activeJoker.Description})");
+            Console.WriteLine($"  [🎯 Goal]: Get {targetScore} scores.\n");
+            Console.Write("  Press any button to start...");
             Console.ReadKey(true);
 
             while (handsLeft > 0 && targetScore > 0)
@@ -36,10 +36,10 @@ namespace XPoker
                 while (!played)
                 {
                     Console.Clear();
-                    DrawHeader("РАУНД ПОКЕРА");
+                    DrawHeader("Poker round");
 
-                    Console.WriteLine($"  Осталось набрать очков: [ {Math.Max(0, targetScore)} ]");
-                    Console.WriteLine($"  Ходы: {handsLeft}   |   Сбросы: {discardsLeft}   |   Джокер: Грубый Джокер\n");
+                    Console.WriteLine($"  Scores left: [ {Math.Max(0, targetScore)} ]");
+                    Console.WriteLine($"  Moves: {handsLeft}   |   Discards: {discardsLeft}   |   Joker: Грубый Джокер\n");
 
                     DisplayCardsFancy(hand);
 
@@ -47,14 +47,14 @@ namespace XPoker
                     var baseScore = eval.GetBaseScore();
 
                     Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
-                    Console.WriteLine($"  │ Комбинация: {eval,-42} │");
-                    Console.WriteLine($"  │ Базово: {baseScore.chips} фишек x {baseScore.mult} множитель                      │");
+                    Console.WriteLine($"  │ Combo: {eval,-42} │");
+                    Console.WriteLine($"  │ Base: {baseScore.chips} chips x {baseScore.mult} multiplier                      │");
                     Console.WriteLine("  └────────────────────────────────────────────────────────┘\n");
 
-                    Console.WriteLine("  Управление:");
-                    Console.WriteLine("    [p] Сыграть руку (Play)");
-                    Console.WriteLine("    [d] Сбросить карты (Discard)");
-                    Console.Write("\n  Ваш выбор (p/d): ");
+                    Console.WriteLine("  Control:");
+                    Console.WriteLine("    [p] Play hand");
+                    Console.WriteLine("    [d] Discard (Discard)");
+                    Console.Write("\n  Your choice (p/d): ");
 
                     string input = Console.ReadLine() ?.Trim().ToLower() ?? "";
 
@@ -68,12 +68,12 @@ namespace XPoker
                     switch (choice)
                     {
                         case "d" when discardsLeft <= 0:
-                            Console.WriteLine("\n  [!] У вас больше нет сбросов! Нажмите Enter...");
+                            Console.WriteLine("\n  [!] You don't have any discards! Press Enter...");
                             Console.ReadLine();
                             continue;
                         case "d":
                         {
-                            Console.Write("  Введите номера карт для сброса через пробел (например: 1 3): ");
+                            Console.Write("  Input card number with space between (example: 1 3): ");
                             string discardInput = Console.ReadLine() ?? "";
                             var indices = ParseIndices(discardInput);
 
@@ -101,21 +101,21 @@ namespace XPoker
                             handsLeft--;
 
                             Console.Clear();
-                            DrawHeader("ПОДСЧЕТ ОЧКОВ РУКИ");
+                            DrawHeader("COUNTING HAND SCORE");
                             DisplayCardsFancy(hand);
 
-                            Console.WriteLine($"  Комбинация: {eval}");
-                            Console.WriteLine($"  Фишки карт ({cardChips}) + База ({baseScore.chips}) = {totalChips} фишек");
-                            Console.WriteLine($"  Множитель (с Джокером): x{totalMult}");
+                            Console.WriteLine($"  Combo: {eval}");
+                            Console.WriteLine($"  Card chips ({cardChips}) + Base ({baseScore.chips}) = {totalChips} chips");
+                            Console.WriteLine($"  Multiplier (with Joker): x{totalMult}");
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.WriteLine("  =========================================");
-                            Console.WriteLine($"  ИГРОВОЙ СЧЕТ РУКИ: +{handScore} очков!");
+                            Console.WriteLine($"  GAME HAND SCORE: +{handScore}");
                             Console.ResetColor();
                             Console.WriteLine("  =========================================\n");
 
                             if (targetScore > 0)
                             {
-                                Console.Write("  Нажмите Enter для продолжения...");
+                                Console.Write("  Press Enter to continue...");
                                 Console.ReadLine();
                             }
 
@@ -126,19 +126,19 @@ namespace XPoker
             }
 
             Console.Clear();
-            DrawHeader("ИТОГИ ИГРЫ");
+            DrawHeader("GAME RESULTS");
             if (targetScore <= 0)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\n  🏆 ПОБЕДА! Вы разнесли блайнд в стиле Balatro!\n");
+                Console.WriteLine("\n  🏆 VICTORY! You crushed the blind, Balatro-style.!\n");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\n  💀 ПОРАЖЕНИЕ! Закончились ходы, цель не достигнута.\n");
+                Console.WriteLine("\n  💀 DEFEAT! No moves left, goal doesn't achieved.\n");
             }
             Console.ResetColor();
-            Console.WriteLine("  Спасибо за игру!");
+            Console.WriteLine("  Thanks for playing!");
         }
 
         private static void DrawHeader(string title)

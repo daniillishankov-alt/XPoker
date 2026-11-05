@@ -6,7 +6,7 @@ namespace XPoker
 {
     public class Joker
     {
-        public string Description { get; set; } = "+10 к множителю";
+        public string Description { get; set; } = "+10 to multiplier";
         public int ApplyMultBonus(int currentMult) => currentMult + 10;
     }
 }

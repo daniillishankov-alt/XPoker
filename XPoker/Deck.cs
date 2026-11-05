@@ -6,7 +6,7 @@ namespace XPoker
 {
     public class Deck
     {
-        private readonly List<Card> _cards = new();
+        private readonly List<Card> _cards = [];
         private static readonly Random _random = new();
 
         public Deck() => Reset();

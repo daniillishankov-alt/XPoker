@@ -31,17 +31,17 @@ namespace XPoker
         {
             return Rank switch
             {
-                HandRank.HighCard => "Старшая карта",
-                HandRank.OnePair => "Пара",
-                HandRank.TwoPair => "Две пары",
-                HandRank.ThreeOfAKind => "Тройка",
-                HandRank.Straight => "Стрит",
-                HandRank.Flush => "Флеш",
-                HandRank.FullHouse => "Фулл-Хаус",
-                HandRank.FourOfAKind => "Каре",
-                HandRank.StraightFlush => "Стрит-Флеш",
-                HandRank.RoyalFlush => "Роял-Флеш",
-                _ => "Неизвестно"
+                HandRank.HighCard => "High Card",
+                HandRank.OnePair => "One Pair",
+                HandRank.TwoPair => "Two Pair",
+                HandRank.ThreeOfAKind => "Three of a Kind",
+                HandRank.Straight => "Straight",
+                HandRank.Flush => "Flush",
+                HandRank.FullHouse => "Full House",
+                HandRank.FourOfAKind => "Four of a Kind",
+                HandRank.StraightFlush => "Straight Flush",
+                HandRank.RoyalFlush => "Royal flush",
+                _ => "UNKNOWN"
             };
         }
     }
