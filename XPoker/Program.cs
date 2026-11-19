@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace XPoker
+﻿namespace XPoker
 {
     class Program
     {
@@ -10,135 +6,260 @@ namespace XPoker
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            Deck deck = new Deck();
-            int targetScore = 300;
-            int handsLeft = 4;
-            int discardsLeft = 3;
-
-            Joker activeJoker = new Joker
+            GameSession session = new();
+            Shop shop = new();
+            Deck deck = new();
+            List<Joker> activeJokers = new()
             {
-                Description = "+10 multiplier for each combo"
+                new Joker { Description = "+10 multiplier for each combo" }
             };
 
-            DrawHeader("XPoker: POKER ROGUELIKE");
-            Console.WriteLine($"\n  [🃏 Joker]: Грубый Джокер ({activeJoker.Description})");
-            Console.WriteLine($"  [🎯 Goal]: Get {targetScore} scores.\n");
-            Console.Write("  Press any button to start...");
+            DrawHeader("🃏 XPoker: ROGUELIKE EDITION 🃏");
+            Console.WriteLine("\n  Welcome to the most intense poker experience!");
+            Console.WriteLine("  Defeat enemies by scoring points in poker hands.\n");
+            Console.Write("  Press any key to start...");
             Console.ReadKey(true);
 
-            while (handsLeft > 0 && targetScore > 0)
+            // Main game loop - multiple rounds
+            while (session.CurrentRound <= 3)
             {
-                deck.Reset();
-                List<Card> hand = new();
-                for (int i = 0; i < 5; i++) hand.Add(deck.Draw());
+                Console.Clear();
+                DrawHeader($"⚔️  ROUND {session.CurrentRound} ⚔️");
+                Console.WriteLine($"\n  Target Score: {session.GetTargetScore()} 🎯");
+                Console.WriteLine($"  Current Money: {session.Money}💰");
+                Console.WriteLine($"  Applied Enhancements: {(session.AppliedEnhancements.Count > 0 ? string.Join(", ", session.AppliedEnhancements) : "None")}");
+                Console.Write("\n  Press Enter to start round...");
+                Console.ReadLine();
 
-                bool played = false;
-                while (!played)
+                // Shop before round
+                DisplayShop(shop, session);
+
+                // Round gameplay - multiple hands
+                session.ResetForNewRound();
+                bool roundWon = false;
+                int handNumber = 1;
+
+                while (session.HandsLeft > 0 && !roundWon)
                 {
-                    Console.Clear();
-                    DrawHeader("Poker round");
+                    deck.Reset();
+                    List<Card> hand = new();
+                    for (int i = 0; i < 5; i++) hand.Add(deck.Draw());
 
-                    Console.WriteLine($"  Scores left: [ {Math.Max(0, targetScore)} ]");
-                    Console.WriteLine($"  Moves: {handsLeft}   |   Discards: {discardsLeft}   |   Joker: Грубый Джокер\n");
+                    int discardsLeft = 3;
+                    bool handPlayed = false;
 
-                    DisplayCardsFancy(hand);
-
-                    var eval = HandEvaluator.Evaluate(hand);
-                    var baseScore = eval.GetBaseScore();
-
-                    Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
-                    Console.WriteLine($"  │ Combo: {eval,-42} │");
-                    Console.WriteLine($"  │ Base: {baseScore.chips} chips x {baseScore.mult} multiplier                      │");
-                    Console.WriteLine("  └────────────────────────────────────────────────────────┘\n");
-
-                    Console.WriteLine("  Control:");
-                    Console.WriteLine("    [p] Play hand");
-                    Console.WriteLine("    [d] Discard (Discard)");
-                    Console.Write("\n  Your choice (p/d): ");
-
-                    string input = Console.ReadLine() ?.Trim().ToLower() ?? "";
-
-                    string choice = input switch
+                    while (!handPlayed)
                     {
-                        "з" => "p",
-                        "в" => "d",
-                        _ => input
-                    };
+                        Console.Clear();
+                        DrawHeader($"🎰 Hand {handNumber} / 5");
 
-                    switch (choice)
-                    {
-                        case "d" when discardsLeft <= 0:
-                            Console.WriteLine("\n  [!] You don't have any discards! Press Enter...");
-                            Console.ReadLine();
-                            continue;
-                        case "d":
+                        int scoreNeeded = session.GetTargetScore() - session.Score;
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"  💰 Round Score: {session.Score} / {session.GetTargetScore()}");
+                        Console.WriteLine($"  🎯 Score Needed: {scoreNeeded}\n");
+                        Console.ResetColor();
+                        Console.WriteLine($"  Hands left: {session.HandsLeft} | Discards: {discardsLeft} | Money: {session.Money}💰\n");
+
+                        DisplayCardsFancy(hand);
+
+                        var eval = HandEvaluator.Evaluate(hand);
+                        var baseScore = eval.GetBaseScore();
+                        int predictedScore = CalculatePredictedScore(hand, eval, baseScore, session, activeJokers);
+
+                        Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
+                        Console.WriteLine($"  │ Combo: {eval,-42} │");
+                        Console.WriteLine($"  │ Base: {baseScore.chips} chips x {baseScore.mult} mult                      │");
+                        Console.WriteLine($"  │ Predicted Score: {predictedScore}🎯{"",-27} │");
+                        Console.WriteLine("  └────────────────────────────────────────────────────────┘\n");
+
+                        Console.WriteLine("  [p] Play hand | [d] Discard | [q] Quit round");
+                        Console.Write("\n  Choice (p/d/q): ");
+
+                        string input = Console.ReadLine()?.Trim().ToLower() ?? "";
+
+                        string choice = input switch
                         {
-                            Console.Write("  Input card number with space between (example: 1 3): ");
-                            string discardInput = Console.ReadLine() ?? "";
-                            var indices = ParseIndices(discardInput);
+                            "з" => "p",
+                            "в" => "d",
+                            "й" => "q",
+                            _ => input
+                        };
 
-                            if (indices.Count > 0)
-                            {
-                                foreach (int idx in indices.OrderByDescending(i => i))
-                                {
-                                    hand.RemoveAt(idx);
-                                    hand.Insert(idx, deck.Draw());
-                                }
-                                discardsLeft--;
-                            }
-
-                            break;
-                        }
-                        case "p":
+                        switch (choice)
                         {
-                            played = true;
-                            int cardChips = hand.Sum(c => c.GetChipValue());
-                            int totalChips = baseScore.chips + cardChips;
-                            int totalMult = activeJoker.ApplyMultBonus(baseScore.mult);
-
-                            int handScore = totalChips * totalMult;
-                            targetScore -= handScore;
-                            handsLeft--;
-
-                            Console.Clear();
-                            DrawHeader("COUNTING HAND SCORE");
-                            DisplayCardsFancy(hand);
-
-                            Console.WriteLine($"  Combo: {eval}");
-                            Console.WriteLine($"  Card chips ({cardChips}) + Base ({baseScore.chips}) = {totalChips} chips");
-                            Console.WriteLine($"  Multiplier (with Joker): x{totalMult}");
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine("  =========================================");
-                            Console.WriteLine($"  GAME HAND SCORE: +{handScore}");
-                            Console.ResetColor();
-                            Console.WriteLine("  =========================================\n");
-
-                            if (targetScore > 0)
-                            {
-                                Console.Write("  Press Enter to continue...");
+                            case "d" when discardsLeft <= 0:
+                                Console.WriteLine("\n  ❌ No discards left! Press Enter...");
                                 Console.ReadLine();
-                            }
+                                continue;
 
-                            break;
+                            case "d":
+                                Console.Write("  Card numbers to discard (1 2 3): ");
+                                string discardInput = Console.ReadLine() ?? "";
+                                var indices = ParseIndices(discardInput);
+
+                                if (indices.Count > 0)
+                                {
+                                    foreach (int idx in indices.OrderByDescending(i => i))
+                                    {
+                                        hand.RemoveAt(idx);
+                                        hand.Add(deck.Draw());
+                                    }
+                                    discardsLeft--;
+                                }
+                                break;
+
+                            case "q":
+                                Console.WriteLine("\n  Quitting round...");
+                                Console.ReadLine();
+                                session.HandsLeft = 0;
+                                break;
+
+                            case "p":
+                                handPlayed = true;
+                                int handScore = CalculateHandScore(hand, eval, baseScore, session, activeJokers);
+                                session.Score += handScore;
+                                session.HandsLeft--;
+                                handNumber++;
+
+                                Console.Clear();
+                                DrawHeader("✨ HAND RESULT ✨");
+                                DisplayCardsFancy(hand);
+                                Console.WriteLine($"  Combo: {eval}");
+                                Console.WriteLine($"  Hand Score: +{handScore}");
+                                Console.ForegroundColor = ConsoleColor.Cyan;
+                                Console.WriteLine($"  Round Total: {session.Score} / {session.GetTargetScore()}");
+                                Console.ResetColor();
+
+                                if (session.Score >= session.GetTargetScore())
+                                {
+                                    Console.WriteLine("\n  ✅ ROUND WON!");
+                                    roundWon = true;
+                                }
+                                else if (session.HandsLeft > 0)
+                                {
+                                    Console.Write("\n  Press Enter to continue...");
+                                    Console.ReadLine();
+                                }
+
+                                break;
                         }
                     }
                 }
+
+                // Round end
+                Console.Clear();
+                if (session.Score >= session.GetTargetScore())
+                {
+                    DrawHeader("🏆 ROUND CLEARED 🏆");
+                    Console.WriteLine($"\n  You defeated round {session.CurrentRound}!");
+                    Console.WriteLine($"  Final Score: {session.Score}");
+                    Console.WriteLine($"  Money Earned: 50💰");
+                    session.Money += 50;
+                    session.CurrentRound++;
+                }
+                else
+                {
+                    DrawHeader("💀 ROUND FAILED 💀");
+                    Console.WriteLine($"\n  You couldn't reach the target score.");
+                    Console.WriteLine($"  Score: {session.Score} / {session.GetTargetScore()}");
+                    break;
+                }
+
+                Console.Write("\n  Press Enter to continue...");
+                Console.ReadLine();
             }
 
+            // Game end
             Console.Clear();
-            DrawHeader("GAME RESULTS");
-            if (targetScore <= 0)
+            DrawHeader("🎮 GAME OVER 🎮");
+            if (session.CurrentRound > 3)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("\n  🏆 VICTORY! You crushed the blind, Balatro-style.!\n");
+                Console.WriteLine($"\n  🏆 VICTORY! You defeated all rounds!");
+                Console.WriteLine($"  Final Money: {session.Money}💰");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\n  💀 DEFEAT! No moves left, goal doesn't achieved.\n");
+                Console.WriteLine($"\n  💀 DEFEAT! You couldn't complete all rounds.");
             }
             Console.ResetColor();
-            Console.WriteLine("  Thanks for playing!");
+            Console.WriteLine("\n  Thanks for playing!");
+            Console.ReadLine();
+        }
+
+        private static void DisplayShop(Shop shop, GameSession session)
+        {
+            var shopItems = shop.GetRandomShop(3);
+
+            while (true)
+            {
+                Console.Clear();
+                DrawHeader("🛒 SHOP 🛒");
+                Console.WriteLine($"\n  Your Money: {session.Money}💰\n");
+
+                for (int i = 0; i < shopItems.Count; i++)
+                {
+                    string affordability = shopItems[i].Cost <= session.Money ? "✅" : "❌";
+                    Console.WriteLine($"  [{i + 1}] {shopItems[i]} {affordability}");
+                }
+
+                Console.WriteLine($"\n  [0] Exit Shop");
+                Console.Write($"  Choose item (0-{shopItems.Count}): ");
+
+                if (!int.TryParse(Console.ReadLine(), out int choice) || choice < 0 || choice > shopItems.Count)
+                    continue;
+
+                if (choice == 0)
+                    break;
+
+                var selectedItem = shopItems[choice - 1];
+                if (session.Money >= selectedItem.Cost)
+                {
+                    session.BuyEnhancement(selectedItem);
+                    Console.WriteLine($"\n  ✅ Bought {selectedItem.Name}!");
+                    shopItems.Remove(selectedItem);
+
+                    var newItems = shop.GetRandomShop(1);
+                    if (newItems.Count > 0)
+                        shopItems.Add(newItems[0]);
+                }
+                else
+                {
+                    Console.WriteLine($"\n  ❌ Not enough money!");
+                }
+
+                Console.ReadLine();
+
+                if (shopItems.Count == 0)
+                    break;
+            }
+        }
+
+        private static int CalculatePredictedScore(List<Card> hand, HandEvaluation eval,
+            (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
+        {
+            int cardChips = hand.Sum(c => c.GetChipValue()) + (session.CardChipsBonus * hand.Count);
+            int totalChips = baseScore.chips + cardChips;
+            int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
+
+            foreach (var joker in jokers)
+                totalMult = joker.ApplyMultBonus(totalMult);
+
+            return totalChips * totalMult;
+        }
+
+        private static int CalculateHandScore(List<Card> hand, HandEvaluation eval,
+            (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
+        {
+            return CalculatePredictedScore(hand, eval, baseScore, session, jokers);
+        }
+
+        private static int GetHandMultiplierBonus(HandRank rank, GameSession session)
+        {
+            return session.HandMultiplierBonus.ContainsKey(rank)
+                ? session.HandMultiplierBonus[rank]
+                : 0;
         }
 
         private static void DrawHeader(string title)
@@ -184,7 +305,7 @@ namespace XPoker
             }
             Console.WriteLine(indicesLine);
 
-            string chipsLine = hand.Select(t => $"({t.GetChipValue()}ф)").Aggregate("  ", (current, chipVal) => current + $"{chipVal.PadLeft(6),-9} ");
+            string chipsLine = hand.Select(t => $"({t.GetChipValue()}🔵)").Aggregate("  ", (current, chipVal) => current + $"{chipVal.PadLeft(6),-9} ");
             Console.WriteLine(chipsLine + "\n");
         }
 
