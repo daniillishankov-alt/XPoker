@@ -14,7 +14,7 @@ namespace XPoker
 
         public int GetTargetScore()
         {
-            // Каждый раунд требует больше очков
+            // Each round requires more chips
             return 300 * CurrentRound;
         }
 
@@ -22,7 +22,7 @@ namespace XPoker
         {
             HandsLeft = 5;
             Score = 0;
-            Money += 25; // Бонус за прохождение раунда
+            Money += 25; // Round completion bonus
         }
 
         public void BuyEnhancement(Enhancement enhancement)

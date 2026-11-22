@@ -1,4 +1,8 @@
-﻿namespace XPoker
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace XPoker
 {
     class Program
     {
@@ -11,7 +15,7 @@
             Deck deck = new();
             List<Joker> activeJokers = new()
             {
-                new Joker { Description = "+10 multiplier for each combo" }
+                new Joker { Description = "+2 multiplier for each combo" }
             };
 
             DrawHeader("🃏 XPoker: ROGUELIKE EDITION 🃏");
@@ -31,10 +35,10 @@
                 Console.Write("\n  Press Enter to start round...");
                 Console.ReadLine();
 
-                // Shop before round
+                // Shop before round starts
                 DisplayShop(shop, session);
 
-                // Round gameplay - multiple hands
+                // Round gameplay - player has 5 hands to reach target score
                 session.ResetForNewRound();
                 bool roundWon = false;
                 int handNumber = 1;
@@ -55,8 +59,8 @@
 
                         int scoreNeeded = session.GetTargetScore() - session.Score;
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine($"  💰 Round Score: {session.Score} / {session.GetTargetScore()}");
                         Console.WriteLine($"  🎯 Score Needed: {scoreNeeded}\n");
+                        Console.WriteLine($"  💰 Round Score: {session.Score} / {session.GetTargetScore()}");
                         Console.ResetColor();
                         Console.WriteLine($"  Hands left: {session.HandsLeft} | Discards: {discardsLeft} | Money: {session.Money}💰\n");
 
@@ -67,9 +71,9 @@
                         int predictedScore = CalculatePredictedScore(hand, eval, baseScore, session, activeJokers);
 
                         Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
-                        Console.WriteLine($"  │ Combo: {eval,-42} │");
-                        Console.WriteLine($"  │ Base: {baseScore.chips} chips x {baseScore.mult} mult                      │");
-                        Console.WriteLine($"  │ Predicted Score: {predictedScore}🎯{"",-27} │");
+                        Console.WriteLine($"  │ Combo: {eval,-42}");
+                        Console.WriteLine($"  │ Base: {baseScore.chips} chips x {baseScore.mult} mult");
+                        Console.WriteLine($"  │ Predicted Score: {predictedScore}🎯{"",-27}");
                         Console.WriteLine("  └────────────────────────────────────────────────────────┘\n");
 
                         Console.WriteLine("  [p] Play hand | [d] Discard | [q] Quit round");
@@ -99,6 +103,7 @@
 
                                 if (indices.Count > 0)
                                 {
+                                    // Replace cards in reverse order to maintain correct indices
                                     foreach (int idx in indices.OrderByDescending(i => i))
                                     {
                                         hand.RemoveAt(idx);
@@ -124,9 +129,28 @@
                                 Console.Clear();
                                 DrawHeader("✨ HAND RESULT ✨");
                                 DisplayCardsFancy(hand);
+
+                                // Display detailed score breakdown
+                                int cardChips = 0;
+                                foreach (int cardIndex in eval.CardsInCombo)
+                                {
+                                    cardChips += hand[cardIndex].GetChipValue();
+                                }
+
+                                int totalChips = baseScore.chips + cardChips;
+                                int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
+
+                                int jokerBonus = 0;
+                                foreach (var joker in activeJokers)
+                                    jokerBonus += 2; // Current joker bonus
+
                                 Console.WriteLine($"  Combo: {eval}");
-                                Console.WriteLine($"  Hand Score: +{handScore}");
+                                Console.WriteLine($"  Base Score: {baseScore.chips} chips × {baseScore.mult} mult");
+                                Console.WriteLine($"  Cards in Combo: {eval.CardsInCombo.Count} cards = {cardChips} chips");
+                                Console.WriteLine($"  Total Chips: {baseScore.chips} + {cardChips} = {totalChips}");
+                                Console.WriteLine($"  Multiplier: {baseScore.mult} (base) + {jokerBonus} (Jokers) = {totalMult}");
                                 Console.ForegroundColor = ConsoleColor.Cyan;
+                                Console.WriteLine($"  Calculation: {totalChips} × {totalMult} = {handScore}");
                                 Console.WriteLine($"  Round Total: {session.Score} / {session.GetTargetScore()}");
                                 Console.ResetColor();
 
@@ -146,7 +170,7 @@
                     }
                 }
 
-                // Round end
+                // Round conclusion
                 Console.Clear();
                 if (session.Score >= session.GetTargetScore())
                 {
@@ -169,7 +193,7 @@
                 Console.ReadLine();
             }
 
-            // Game end
+            // Game conclusion
             Console.Clear();
             DrawHeader("🎮 GAME OVER 🎮");
             if (session.CurrentRound > 3)
@@ -188,6 +212,9 @@
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Displays the in-game shop where player can buy enhancements
+        /// </summary>
         private static void DisplayShop(Shop shop, GameSession session)
         {
             var shopItems = shop.GetRandomShop(3);
@@ -236,25 +263,51 @@
             }
         }
 
+        /// <summary>
+        /// Calculates the predicted score for the current hand
+        /// Only counts cards that are part of the combo
+        /// </summary>
         private static int CalculatePredictedScore(List<Card> hand, HandEvaluation eval,
             (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
         {
-            int cardChips = hand.Sum(c => c.GetChipValue()) + (session.CardChipsBonus * hand.Count);
+            // Calculate chips only from cards in the combo
+            int cardChips = 0;
+
+            if (eval.CardsInCombo == null || eval.CardsInCombo.Count == 0)
+            {
+                eval.CardsInCombo = new List<int>();
+            }
+
+            foreach (int cardIndex in eval.CardsInCombo)
+            {
+                if (cardIndex >= 0 && cardIndex < hand.Count)
+                {
+                    cardChips += hand[cardIndex].GetChipValue();
+                }
+            }
+
             int totalChips = baseScore.chips + cardChips;
             int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
 
+            // Apply joker multipliers
             foreach (var joker in jokers)
                 totalMult = joker.ApplyMultBonus(totalMult);
 
             return totalChips * totalMult;
         }
 
+        /// <summary>
+        /// Wrapper for calculating final hand score (same as predicted)
+        /// </summary>
         private static int CalculateHandScore(List<Card> hand, HandEvaluation eval,
             (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
         {
             return CalculatePredictedScore(hand, eval, baseScore, session, jokers);
         }
 
+        /// <summary>
+        /// Gets any hand rank multiplier bonuses from purchased enhancements
+        /// </summary>
         private static int GetHandMultiplierBonus(HandRank rank, GameSession session)
         {
             return session.HandMultiplierBonus.ContainsKey(rank)
@@ -262,6 +315,9 @@
                 : 0;
         }
 
+        /// <summary>
+        /// Displays a stylized header with the given title
+        /// </summary>
         private static void DrawHeader(string title)
         {
             Console.ForegroundColor = ConsoleColor.DarkMagenta;
@@ -271,6 +327,9 @@
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Displays cards in a fancy visual format with ASCII art
+        /// </summary>
         private static void DisplayCardsFancy(List<Card> hand)
         {
             string line1 = "  ";
@@ -279,16 +338,16 @@
             string line4 = "  ";
             string line5 = "  ";
 
-            foreach (var t in hand)
+            foreach (var card in hand)
             {
-                string r = t.GetRankStr();
-                char s = t.GetSuitChar();
-                string padR = r.Length == 1 ? " " : "";
+                string rank = card.GetRankStr();
+                char suit = card.GetSuitChar();
+                string padding = rank.Length == 1 ? " " : "";
 
                 line1 += "┌───────┐ ";
-                line2 += $"│ {r}{padR}    │ ";
-                line3 += $"│   {s}   │ ";
-                line4 += $"│    {padR}{r} │ ";
+                line2 += $"│ {rank}{padding}    │ ";
+                line3 += $"│   {suit}   │ ";
+                line4 += $"│    {padding}{rank} │ ";
                 line5 += "└───────┘ ";
             }
 
@@ -309,6 +368,9 @@
             Console.WriteLine(chipsLine + "\n");
         }
 
+        /// <summary>
+        /// Parses card indices from user input (e.g., "1 3 5" -> [0, 2, 4])
+        /// </summary>
         private static List<int> ParseIndices(string input)
         {
             List<int> indices = new();

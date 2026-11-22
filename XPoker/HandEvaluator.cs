@@ -4,6 +4,7 @@
     {
         public HandRank Rank { get; set; }
         public List<int> HighCards { get; set; } = new();
+        public List<int> CardsInCombo { get; set; } = new(); // Combo card index
 
         public (int chips, int mult) GetBaseScore()
         {
@@ -41,6 +42,7 @@
             };
         }
     }
+
     public static class HandEvaluator
     {
         public static HandEvaluation Evaluate(List<Card> cards)
@@ -68,7 +70,11 @@
 
             if (isFlush && isStraight)
             {
-                return straightHighRank == (int)Rank.Ace ? new HandEvaluation { Rank = HandRank.RoyalFlush } : new HandEvaluation { Rank = HandRank.StraightFlush, HighCards = [straightHighRank] };
+                var eval = straightHighRank == (int)Rank.Ace
+                    ? new HandEvaluation { Rank = HandRank.RoyalFlush }
+                    : new HandEvaluation { Rank = HandRank.StraightFlush, HighCards = [straightHighRank] };
+                eval.CardsInCombo = Enumerable.Range(0, 5).ToList(); // All 5 cards are part of the combo
+                return eval;
             }
 
             var groups = sorted.GroupBy(c => c.Rank)
@@ -79,42 +85,95 @@
             switch (groups[0].Count())
             {
                 case 4:
-                    return new HandEvaluation
                     {
-                        Rank = HandRank.FourOfAKind,
-                        HighCards =
-                        [(int)groups[0].Key, (int)groups[1].Key]
-                    };
+                        var cardsInCombo = cards.Where(c => c.Rank == groups[0].Key).Select(c => cards.IndexOf(c)).ToList();
+                        return new HandEvaluation
+                        {
+                            Rank = HandRank.FourOfAKind,
+                            HighCards = [(int)groups[0].Key, (int)groups[1].Key],
+                            CardsInCombo = cardsInCombo
+                        };
+                    }
                 case 3 when groups[1].Count() == 2:
-                    return new HandEvaluation { Rank = HandRank.FullHouse, HighCards = [(int)groups[0].Key, (int)groups[1].Key] };
+                    {
+                        var cardsInCombo = cards.Where(c => c.Rank == groups[0].Key || c.Rank == groups[1].Key).Select(c => cards.IndexOf(c)).ToList();
+                        return new HandEvaluation
+                        {
+                            Rank = HandRank.FullHouse,
+                            HighCards = [(int)groups[0].Key, (int)groups[1].Key],
+                            CardsInCombo = cardsInCombo
+                        };
+                    }
             }
 
             if (isFlush)
-                return new HandEvaluation { Rank = HandRank.Flush, HighCards = sorted.Select(c => (int)c.Rank).ToList() };
+            {
+                var eval = new HandEvaluation
+                {
+                    Rank = HandRank.Flush,
+                    HighCards = sorted.Select(c => (int)c.Rank).ToList(),
+                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards are part of the combo
+                };
+                return eval;
+            }
 
             if (isStraight)
-                return new HandEvaluation { Rank = HandRank.Straight, HighCards = [straightHighRank] };
+            {
+                var eval = new HandEvaluation
+                {
+                    Rank = HandRank.Straight,
+                    HighCards = [straightHighRank],
+                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards are part of the combo
+                };
+                return eval;
+            }
 
             switch (groups[0].Count())
             {
                 case 3:
                     {
+                        var cardsInCombo = cards.Where(c => c.Rank == groups[0].Key).Select(c => cards.IndexOf(c)).ToList();
                         var high = new List<int> { (int)groups[0].Key };
                         high.AddRange(groups.Skip(1).Select(g => (int)g.Key));
-                        return new HandEvaluation { Rank = HandRank.ThreeOfAKind, HighCards = high };
+                        return new HandEvaluation
+                        {
+                            Rank = HandRank.ThreeOfAKind,
+                            HighCards = high,
+                            CardsInCombo = cardsInCombo
+                        };
                     }
                 case 2 when groups[1].Count() == 2:
-                    return new HandEvaluation { Rank = HandRank.TwoPair, HighCards = [(int)groups[0].Key, (int)groups[1].Key, (int)groups[2].Key] };
+                    {
+                        var cardsInCombo = cards.Where(c => c.Rank == groups[0].Key || c.Rank == groups[1].Key).Select(c => cards.IndexOf(c)).ToList();
+                        return new HandEvaluation
+                        {
+                            Rank = HandRank.TwoPair,
+                            HighCards = [(int)groups[0].Key, (int)groups[1].Key, (int)groups[2].Key],
+                            CardsInCombo = cardsInCombo
+                        };
+                    }
             }
 
             if (groups[0].Count() == 2)
             {
+                var cardsInCombo = cards.Where(c => c.Rank == groups[0].Key).Select(c => cards.IndexOf(c)).ToList();
                 var high = new List<int> { (int)groups[0].Key };
                 high.AddRange(groups.Skip(1).Select(g => (int)g.Key));
-                return new HandEvaluation { Rank = HandRank.OnePair, HighCards = high };
+                return new HandEvaluation
+                {
+                    Rank = HandRank.OnePair,
+                    HighCards = high,
+                    CardsInCombo = cardsInCombo
+                };
             }
 
-            return new HandEvaluation { Rank = HandRank.HighCard, HighCards = sorted.Select(c => (int)c.Rank).ToList() };
+            // High Card - All cards are part of the high card evaluation
+            return new HandEvaluation
+            {
+                Rank = HandRank.HighCard,
+                HighCards = sorted.Select(c => (int)c.Rank).ToList(),
+                CardsInCombo = Enumerable.Range(0, 5).ToList()
+            };
         }
     }
 }
