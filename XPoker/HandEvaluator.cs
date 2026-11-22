@@ -1,10 +1,14 @@
-﻿namespace XPoker
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace XPoker
 {
     public class HandEvaluation
     {
         public HandRank Rank { get; set; }
         public List<int> HighCards { get; set; } = new();
-        public List<int> CardsInCombo { get; set; } = new(); // Combo card index
+        public List<int> CardsInCombo { get; set; } = new(); // Indices of cards that contribute to combo
 
         public (int chips, int mult) GetBaseScore()
         {
@@ -73,7 +77,7 @@
                 var eval = straightHighRank == (int)Rank.Ace
                     ? new HandEvaluation { Rank = HandRank.RoyalFlush }
                     : new HandEvaluation { Rank = HandRank.StraightFlush, HighCards = [straightHighRank] };
-                eval.CardsInCombo = Enumerable.Range(0, 5).ToList(); // All 5 cards are part of the combo
+                eval.CardsInCombo = Enumerable.Range(0, 5).ToList(); // All 5 cards form the straight flush
                 return eval;
             }
 
@@ -112,7 +116,7 @@
                 {
                     Rank = HandRank.Flush,
                     HighCards = sorted.Select(c => (int)c.Rank).ToList(),
-                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards are part of the combo
+                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards form the flush
                 };
                 return eval;
             }
@@ -123,7 +127,7 @@
                 {
                     Rank = HandRank.Straight,
                     HighCards = [straightHighRank],
-                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards are part of the combo
+                    CardsInCombo = Enumerable.Range(0, 5).ToList() // All 5 cards form the straight
                 };
                 return eval;
             }
@@ -167,12 +171,15 @@
                 };
             }
 
-            // High Card - All cards are part of the high card evaluation
+            // High Card - Only the highest card contributes to the combo
+            var highestCard = sorted[0];
+            var highestCardIndex = cards.IndexOf(highestCard);
+
             return new HandEvaluation
             {
                 Rank = HandRank.HighCard,
                 HighCards = sorted.Select(c => (int)c.Rank).ToList(),
-                CardsInCombo = Enumerable.Range(0, 5).ToList()
+                CardsInCombo = [highestCardIndex] // Only 1 card in combo for High Card
             };
         }
     }

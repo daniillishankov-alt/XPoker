@@ -7,7 +7,7 @@ namespace XPoker.Tests
     public class HandEvaluatorTests
     {
         [Fact]
-        public void Evaluate_HighCard()
+        public void Evaluate_HighCard_OnlyHighestCardInCombo()
         {
             var hand = new List<Card>
             {
@@ -15,16 +15,16 @@ namespace XPoker.Tests
                 new(Suit.Diamonds, Rank.Four),
                 new(Suit.Clubs, Rank.Six),
                 new(Suit.Spades, Rank.Eight),
-                new(Suit.Hearts, Rank.Ten)
+                new(Suit.Hearts, Rank.King) // Highest card
             };
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.HighCard, result.Rank);
-            Assert.Equal(5, result.CardsInCombo.Count);
+            Assert.Single(result.CardsInCombo); // Only 1 card in combo
         }
 
         [Fact]
-        public void Evaluate_OnePair()
+        public void Evaluate_OnePair_OnlyPairInCombo()
         {
             var hand = new List<Card>
             {
@@ -37,11 +37,11 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.OnePair, result.Rank);
-            Assert.Equal(2, result.CardsInCombo.Count);
+            Assert.Equal(2, result.CardsInCombo.Count); // Only the pair
         }
 
         [Fact]
-        public void Evaluate_TwoPair()
+        public void Evaluate_TwoPair_OnlyPairsInCombo()
         {
             var hand = new List<Card>
             {
@@ -54,7 +54,7 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.TwoPair, result.Rank);
-            Assert.Equal(4, result.CardsInCombo.Count);
+            Assert.Equal(4, result.CardsInCombo.Count); // Only the two pairs
         }
 
         [Fact]
@@ -71,11 +71,11 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.ThreeOfAKind, result.Rank);
-            Assert.Equal(3, result.CardsInCombo.Count);
+            Assert.Equal(3, result.CardsInCombo.Count); // Only the three of a kind
         }
 
         [Fact]
-        public void Evaluate_Straight()
+        public void Evaluate_Straight_AllCardsInCombo()
         {
             var hand = new List<Card>
             {
@@ -88,7 +88,7 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.Straight, result.Rank);
-            Assert.Equal(5, result.CardsInCombo.Count);
+            Assert.Equal(5, result.CardsInCombo.Count); // All cards in straight
         }
 
         [Fact]
@@ -105,10 +105,11 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.Straight, result.Rank);
+            Assert.Equal(5, result.CardsInCombo.Count);
         }
 
         [Fact]
-        public void Evaluate_Flush()
+        public void Evaluate_Flush_AllCardsInCombo()
         {
             var hand = new List<Card>
             {
@@ -121,11 +122,11 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.Flush, result.Rank);
-            Assert.Equal(5, result.CardsInCombo.Count);
+            Assert.Equal(5, result.CardsInCombo.Count); // All cards in flush
         }
 
         [Fact]
-        public void Evaluate_FullHouse()
+        public void Evaluate_FullHouse_AllCardsInCombo()
         {
             var hand = new List<Card>
             {
@@ -138,7 +139,7 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.FullHouse, result.Rank);
-            Assert.Equal(5, result.CardsInCombo.Count);
+            Assert.Equal(5, result.CardsInCombo.Count); // All cards in full house
         }
 
         [Fact]
@@ -155,7 +156,7 @@ namespace XPoker.Tests
 
             var result = HandEvaluator.Evaluate(hand);
             Assert.Equal(HandRank.FourOfAKind, result.Rank);
-            Assert.Equal(4, result.CardsInCombo.Count);
+            Assert.Equal(4, result.CardsInCombo.Count); // Only four of a kind
         }
 
         [Fact]
