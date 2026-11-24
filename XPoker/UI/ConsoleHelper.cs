@@ -1,8 +1,6 @@
 namespace XPoker.UI
 {
-    /// <summary>
     /// Helper class for console UI operations
-    /// </summary>
     public static class ConsoleHelper
     {
         private const int BOX_WIDTH = 60;
@@ -13,9 +11,8 @@ namespace XPoker.UI
         private const char HORIZONTAL = '─';
         private const char VERTICAL = '│';
 
-        /// <summary>
         /// Draws a styled box with a single line of text
-        /// </summary>
+        
         public static void DrawBox(string line1, string? line2 = null, string? line3 = null)
         {
             Console.WriteLine($"  {TOP_LEFT}{new string(HORIZONTAL, BOX_WIDTH - 4)}{TOP_RIGHT}");
@@ -30,9 +27,7 @@ namespace XPoker.UI
             Console.WriteLine($"  {BOTTOM_LEFT}{new string(HORIZONTAL, BOX_WIDTH - 4)}{BOTTOM_RIGHT}");
         }
 
-        /// <summary>
         /// Draws score information with proper formatting
-        /// </summary>
         public static void DisplayScoreInfo(string combo, int baseChips, int baseMult, int predictedScore)
         {
             Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
@@ -42,9 +37,7 @@ namespace XPoker.UI
             Console.WriteLine("  └────────────────────────────────────────────────────────┘\n");
         }
 
-        /// <summary>
         /// Displays detailed score breakdown
-        /// </summary>
         public static void DisplayScoreBreakdown(ScoreBreakdown breakdown)
         {
             Console.WriteLine($"  Base Score: {breakdown.BaseChips} chips × {breakdown.BaseMultiplier} mult");

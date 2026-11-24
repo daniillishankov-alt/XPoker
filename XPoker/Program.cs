@@ -1,8 +1,8 @@
 ﻿namespace XPoker
 {
-    /// <summary>
+    
     /// Game constants for easy configuration
-    /// </summary>
+    
     internal static class GameConstants
     {
         public const int HAND_SIZE = 5;
@@ -221,9 +221,7 @@
 			Console.ReadLine();
 		}
 
-		/// <summary>
 		/// Displays the in-game shop where player can buy enhancements
-		/// </summary>
 		private static void DisplayShop(Shop shop, GameSession session)
 		{
 			var shopItems = shop.GetRandomShop(3);
@@ -272,10 +270,8 @@
 			}
 		}
 
-        /// <summary>
         /// Calculates the predicted score for the current hand
         /// Only counts cards that are part of the combo
-        /// </summary>
         private static int CalculatePredictedScore(List<Card> hand, HandEvaluation eval,
             (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
         {
@@ -305,9 +301,7 @@
             return totalChips * totalMult;
         }
 
-        /// <summary>
         /// Calculates detailed score breakdown for display
-        /// </summary>
         private static UI.ScoreBreakdown CalculateScoreBreakdown(List<Card> hand, HandEvaluation eval,
             (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
         {
@@ -332,18 +326,14 @@
             };
         }
 
-        /// <summary>
         /// Wrapper for calculating final hand score
-        /// </summary>
         private static int CalculateHandScore(List<Card> hand, HandEvaluation eval,
             (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
         {
             return CalculatePredictedScore(hand, eval, baseScore, session, jokers);
         }
 
-        /// <summary>
         /// Gets any hand rank multiplier bonuses from purchased enhancements
-        /// </summary>
 		private static int GetHandMultiplierBonus(HandRank rank, GameSession session)
 		{
 			return session.HandMultiplierBonus.ContainsKey(rank)
@@ -351,9 +341,7 @@
 				: 0;
 		}
 
-		/// <summary>
 		/// Displays a stylized header with the given title
-		/// </summary>
 		private static void DrawHeader(string title)
 		{
 			Console.ForegroundColor = ConsoleColor.DarkMagenta;
@@ -363,9 +351,7 @@
 			Console.ResetColor();
 		}
 
-		/// <summary>
 		/// Displays cards in a fancy visual format with ASCII art
-		/// </summary>
 		private static void DisplayCardsFancy(List<Card> hand)
 		{
 			string line1 = "  ";
@@ -404,9 +390,7 @@
 			Console.WriteLine(chipsLine + "\n");
 		}
 
-		/// <summary>
 		/// Parses card indices from user input (e.g., "1 3 5" -> [0, 2, 4])
-		/// </summary>
 		private static List<int> ParseIndices(string input)
 		{
 			List<int> indices = new();

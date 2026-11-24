@@ -23,7 +23,7 @@ namespace XPoker
                 HandRank.FullHouse => (40, 4),
                 HandRank.FourOfAKind => (60, 7),
                 HandRank.StraightFlush => (100, 8),
-                HandRank.RoyalFlush => (100, 8),
+                HandRank.RoyalFlush => (100, 10),
                 _ => (5, 1)
             };
         }
