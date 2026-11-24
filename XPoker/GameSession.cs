@@ -14,8 +14,8 @@ namespace XPoker
 
         public int GetTargetScore()
         {
-            // Each round requires more chips
-            return 300 * CurrentRound;
+            // Each round requires more chips (balanced difficulty scaling)
+            return 100 * CurrentRound;
         }
 
         public void ResetForNewRound()
@@ -32,8 +32,18 @@ namespace XPoker
                 Money -= enhancement.Cost;
                 AppliedEnhancements.Add(enhancement.Name);
 
-                if (enhancement.Type == EnhancementType.CardChips)
-                    CardChipsBonus += enhancement.Value;
+                // Apply enhancement bonuses
+                switch (enhancement.Type)
+                {
+                    case EnhancementType.CardChips:
+                        CardChipsBonus += enhancement.Value;
+                        break;
+                    case EnhancementType.JokerSlot:
+                        JokerSlots += enhancement.Value;
+                        break;
+                    // ChipsBonus and MultiplierBonus require specific hand info (not available here)
+                    // These would be better applied during hand evaluation
+                }
             }
         }
     }

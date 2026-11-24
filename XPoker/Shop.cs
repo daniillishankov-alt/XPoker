@@ -3,7 +3,6 @@ namespace XPoker
     public class Shop
     {
         private readonly List<Enhancement> _availableEnhancements = new();
-        private readonly Random _random = new();
 
         public Shop()
         {
@@ -32,10 +31,15 @@ namespace XPoker
             if (_availableEnhancements.Count == 0)
                 return new List<Enhancement>();
 
-            return _availableEnhancements
-                .OrderBy(_ => _random.Next())
-                .Take(Math.Min(count, _availableEnhancements.Count))
-                .ToList();
+            var items = _availableEnhancements.ToList();
+            // Shuffle using simple Random approach (compatible with .NET 8)
+            for (int i = items.Count - 1; i > 0; i--)
+            {
+                int randomIndex = Random.Shared.Next(i + 1);
+                (items[i], items[randomIndex]) = (items[randomIndex], items[i]);
+            }
+            
+            return items.Take(Math.Min(count, items.Count)).ToList();
         }
 
         public Enhancement GetEnhancementByIndex(int index, List<Enhancement> shop)
