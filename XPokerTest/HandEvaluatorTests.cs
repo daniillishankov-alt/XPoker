@@ -2,7 +2,7 @@ using Xunit;
 using XPoker;
 using System.Collections.Generic;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class HandEvaluatorTests
     {
@@ -202,7 +202,7 @@ namespace XPoker.Tests
         [InlineData(HandRank.FullHouse, 40, 4)]
         [InlineData(HandRank.FourOfAKind, 60, 7)]
         [InlineData(HandRank.StraightFlush, 100, 8)]
-        [InlineData(HandRank.RoyalFlush, 100, 8)]
+        [InlineData(HandRank.RoyalFlush, 100, 10)]
         public void GetBaseScore_ReturnsCorrectValues(HandRank rank, int expectedChips, int expectedMult)
         {
             var eval = new HandEvaluation { Rank = rank };

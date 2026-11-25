@@ -5,8 +5,8 @@
     
     internal static class GameConstants
     {
-        public const int HAND_SIZE = 5;
-        public const int DISCARDS_PER_HAND = 3;
+        public const int HAND_SIZE = 8;
+        public const int DISCARDS_PER_HAND = 4;
         public const int HANDS_PER_ROUND = 5;
         public const int MAX_ROUNDS = 3;
         public const int ROUND_COMPLETION_MONEY = 50;
@@ -23,12 +23,8 @@
 			GameSession session = new();
 			Shop shop = new();
 			Deck deck = new();
-			List<Joker> activeJokers = new()
-			{
-				new Joker { Description = "+2 multiplier for each combo" }
-			};
 
-			DrawHeader("🃏 XPoker: ROGUELIKE EDITION 🃏");
+			DrawHeader("🃏 XPoker 🃏");
 			Console.WriteLine("\n  Welcome to the most intense poker experience!");
 			Console.WriteLine("  Defeat enemies by scoring points in poker hands.\n");
 			Console.Write("  Press any key to start...");
@@ -78,7 +74,7 @@
 
 						var eval = HandEvaluator.Evaluate(hand);
 						var baseScore = eval.GetBaseScore();
-						int predictedScore = CalculatePredictedScore(hand, eval, baseScore, session, activeJokers);
+						int predictedScore = CalculatePredictedScore(hand, eval, baseScore, session);
 
 						Console.WriteLine("  ┌────────────────────────────────────────────────────────┐");
 						Console.WriteLine($"  │ Combo: {eval,-42}");
@@ -130,7 +126,7 @@
 
 							case "p":
 								handPlayed = true;
-								int handScore = CalculateHandScore(hand, eval, baseScore, session, activeJokers);
+								int handScore = CalculateHandScore(hand, eval, baseScore, session);
 								session.Score += handScore;
 								session.HandsLeft--;
 								handNumber++;
@@ -149,15 +145,12 @@
 								int totalChips = baseScore.chips + cardChips;
 								int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
 
-								int jokerBonus = 0;
-								foreach (var joker in activeJokers)
-									jokerBonus += 2; // Current joker bonus
 
 								Console.WriteLine($"  Combo: {eval}");
 								Console.WriteLine($"  Base Score: {baseScore.chips} chips × {baseScore.mult} mult");
 								Console.WriteLine($"  Cards in Combo: {eval.CardsInCombo.Count} cards = {cardChips} chips");
 								Console.WriteLine($"  Total Chips: {baseScore.chips} + {cardChips} = {totalChips}");
-								Console.WriteLine($"  Multiplier: {baseScore.mult} (base) + {jokerBonus} (Jokers) = {totalMult}");
+								Console.WriteLine($"  Multiplier: {baseScore.mult} (base) = {totalMult}");
 								Console.ForegroundColor = ConsoleColor.Cyan;
 								Console.WriteLine($"  Calculation: {totalChips} × {totalMult} = {handScore}");
 								Console.WriteLine($"  Round Total: {session.Score} / {session.GetTargetScore()}");
@@ -273,7 +266,7 @@
         /// Calculates the predicted score for the current hand
         /// Only counts cards that are part of the combo
         private static int CalculatePredictedScore(List<Card> hand, HandEvaluation eval,
-            (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
+            (int chips, int mult) baseScore, GameSession session)
         {
             // Calculate chips only from cards in the combo
             int cardChips = 0;
@@ -294,24 +287,19 @@
             int totalChips = baseScore.chips + cardChips;
             int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
 
-            // Apply joker multipliers
-            foreach (var joker in jokers)
-                totalMult = joker.ApplyMultBonus(totalMult);
-
             return totalChips * totalMult;
         }
 
         /// Calculates detailed score breakdown for display
         private static UI.ScoreBreakdown CalculateScoreBreakdown(List<Card> hand, HandEvaluation eval,
-            (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
+            (int chips, int mult) baseScore, GameSession session)
         {
             int cardChips = eval.CardsInCombo
                 .Where(idx => idx >= 0 && idx < hand.Count)
                 .Sum(idx => hand[idx].GetChipValue());
 
             int totalChips = baseScore.chips + cardChips;
-            int jokerBonus = jokers.Count * 2; // Each joker adds +2
-            int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session) + jokerBonus;
+            int totalMult = baseScore.mult + GetHandMultiplierBonus(eval.Rank, session);
 
             return new UI.ScoreBreakdown
             {
@@ -319,7 +307,6 @@
                 CardChipsInCombo = cardChips,
                 TotalChips = totalChips,
                 BaseMultiplier = baseScore.mult,
-                JokerBonus = jokerBonus,
                 TotalMultiplier = totalMult,
                 CardsInComboCount = eval.CardsInCombo.Count,
                 FinalScore = totalChips * totalMult
@@ -328,9 +315,9 @@
 
         /// Wrapper for calculating final hand score
         private static int CalculateHandScore(List<Card> hand, HandEvaluation eval,
-            (int chips, int mult) baseScore, GameSession session, List<Joker> jokers)
+            (int chips, int mult) baseScore, GameSession session)
         {
-            return CalculatePredictedScore(hand, eval, baseScore, session, jokers);
+            return CalculatePredictedScore(hand, eval, baseScore, session);
         }
 
         /// Gets any hand rank multiplier bonuses from purchased enhancements

@@ -15,7 +15,7 @@ namespace XPoker
         public int GetTargetScore()
         {
             // Each round requires more chips (balanced difficulty scaling)
-            return 100 * CurrentRound;
+            return 300 * CurrentRound;
         }
 
         public void ResetForNewRound()

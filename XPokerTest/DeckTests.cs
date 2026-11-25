@@ -3,7 +3,7 @@ using XPoker;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class DeckTests
     {

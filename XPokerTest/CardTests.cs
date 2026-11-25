@@ -1,7 +1,7 @@
 using Xunit;
 using XPoker;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class CardTests
     {

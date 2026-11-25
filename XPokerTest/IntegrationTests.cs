@@ -2,7 +2,7 @@ using Xunit;
 using XPoker;
 using System.Collections.Generic;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class IntegrationTests
     {
@@ -73,7 +73,6 @@ namespace XPoker.Tests
         {
             var session = new GameSession();
             var deck = new Deck();
-            var jokers = new List<Joker> { new Joker { Description = "+2 multiplier" } };
 
             // Hand 1
             var hand1 = new List<Card>

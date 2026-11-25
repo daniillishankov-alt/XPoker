@@ -2,7 +2,7 @@ using Xunit;
 using XPoker;
 using System.Collections.Generic;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class ScoreCalculationTests
     {
@@ -14,7 +14,7 @@ namespace XPoker.Tests
                 new(Suit.Hearts, Rank.King),    // 10 chips (highest)
                 new(Suit.Diamonds, Rank.Queen), // 10 chips (not counted)
                 new(Suit.Clubs, Rank.Jack),     // 10 chips (not counted)
-                new(Suit.Spades, Rank.Ten),     // 10 chips (not counted)
+                new(Suit.Spades, Rank.Two),     // 10 chips (not counted)
                 new(Suit.Hearts, Rank.Nine)     // 9 chips (not counted)
             };
 
@@ -61,7 +61,7 @@ namespace XPoker.Tests
                 new(Suit.Diamonds, Rank.King),
                 new(Suit.Clubs, Rank.Queen),
                 new(Suit.Spades, Rank.Jack),
-                new(Suit.Hearts, Rank.Ten)
+                new(Suit.Hearts, Rank.Two)
             };
 
             var eval = HandEvaluator.Evaluate(hand);

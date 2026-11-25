@@ -2,7 +2,7 @@ using Xunit;
 using XPoker;
 using System.Linq;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class ShopTests
     {

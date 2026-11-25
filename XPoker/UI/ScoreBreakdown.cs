@@ -1,8 +1,6 @@
 namespace XPoker.UI
 {
-    /// <summary>
     /// Represents a detailed breakdown of score calculation for display purposes
-    /// </summary>
     public class ScoreBreakdown
     {
         public int BaseChips { get; set; }

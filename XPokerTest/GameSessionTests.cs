@@ -1,7 +1,7 @@
 using Xunit;
 using XPoker;
 
-namespace XPoker.Tests
+namespace XPokerTests
 {
     public class GameSessionTests
     {
@@ -16,9 +16,9 @@ namespace XPoker.Tests
         }
 
         [Theory]
-        [InlineData(1, 100)]
-        [InlineData(2, 200)]
-        [InlineData(3, 300)]
+        [InlineData(1, 300)]
+        [InlineData(2, 600)]
+        [InlineData(3, 900)]
         public void GetTargetScore_ReturnsCorrectValue(int round, int expected)
         {
             var session = new GameSession { CurrentRound = round };
